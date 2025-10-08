@@ -1,10 +1,9 @@
-
-project_id = "ndf-bootstrap-prj"
+project_id = "test-bootstrap-prj"
 region     = "me-central2"
-org_id     = "28552764765"
+org_id     = "012345678901"
 
 # folders = {
-#   "Security"    = { parent = "organizations/209803908259" }
+#   "Security"    = { parent = "organizations/012345678901" }
 # }
 
 policies = {
@@ -25,4 +24,5 @@ policies = {
   # "iam.allowedPolicyMemberDomains" = { allow = [""]} # your Google Workspace domain ID (already enabled)
   "gcp.resourceLocations"           = { allow = ["me-central2"] } # example
   
+
 }
