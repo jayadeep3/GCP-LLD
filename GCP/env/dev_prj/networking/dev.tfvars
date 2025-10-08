@@ -1,6 +1,6 @@
 #vpc
 
-project_id = "ndf-dev-prj-mec2-01"
+project_id = "test-dev-prj-mec2-01"
 region     = "me-central2"
 
 vpcs = {
@@ -14,7 +14,7 @@ vpcs = {
 
 # #subnet
 
-# project_id = "ndf-dev-prj-mec2-0"
+# project_id = "test-dev-prj-mec2-0"
 
 subnets = {
   snet-dev-web-mec2-0 = {
@@ -188,4 +188,5 @@ firewall_rules = {
   }
 
 }
+
 
