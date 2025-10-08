@@ -1,6 +1,6 @@
 #vpc
 
-project_id = "ndf-security-prj-mec2-01"
+project_id = "test-security-prj-mec2-01"
 region     = "me-central2"
 
 vpcs = {
@@ -81,7 +81,7 @@ firewall_rules = {
 
 # # routes
 
-# project_id = "ndf-security-prj-mec2-0"
+# project_id = "test-security-prj-mec2-0"
 
 routes = {
 
@@ -166,8 +166,3 @@ routes = {
   }
 
 }
-
-
-
-
-
