@@ -1,6 +1,6 @@
 # #vpc
 
-project_id = "ndf-network-prj-mec2-01"
+project_id = "test-network-prj-mec2-01"
 region     = "me-central2"
 
 vpcs = {
@@ -33,7 +33,7 @@ vpcs = {
 
 
 #subnets
-# project_id = "ndf-networkk-prj-mec2-100"
+# project_id = "test-networkk-prj-mec2-100"
 
 subnets = {
 
@@ -383,9 +383,9 @@ internal_lbs = {
     ip_address = "10.60.20.22"
     labels = {
       environment = "hub"
-      owner       = "ndf"
-      app         = "ndf"
-      department  = "ndf-networking"
+      owner       = "test"
+      app         = "test"
+      department  = "test-networking"
       service_type = "lb"
     }
 }
@@ -397,9 +397,9 @@ internal_lbs = {
     ip_address = "10.60.20.34"
     labels = {
       environment = "hub"
-      owner       = "ndf"
-      app         = "ndf"
-      department  = "ndf-networking"
+      owner       = "test"
+      app         = "test"
+      department  = "test-networking"
       service_type = "lb"
     }
   }
@@ -414,9 +414,9 @@ managed_zones = {
   #   visibility = "private"
   #   labels  = {
   #     environment = "hub"
-  #     owner       = "ndf"
-  #     app         = "ndf"
-  #     department  = "ndf-networking"
+  #     owner       = "test"
+  #     app         = "test"
+  #     department  = "test-networking"
   #     service_type = "dns"
   #   }
   # }
@@ -427,9 +427,9 @@ managed_zones = {
     visibility = "private"
     labels  = {
       environment = "hub"
-      owner       = "ndf"
-      app         = "ndf"
-      department  = "ndf-networking"
+      owner       = "test"
+      app         = "test"
+      department  = "test-networking"
       service_type = "dns"
     }
   }
@@ -468,4 +468,5 @@ records = {
 #     shared_secret = "xyz3457"
 #     router        = "transit_router"
 # }
+
 
