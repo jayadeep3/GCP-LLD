@@ -1,167 +1,116 @@
 # GCP-LLD
-GCP Landing Zone Implementation
 
+**GCP Landing Zone Implementation**
 
+This repository provides an opinionated, modular, and scalable Landing Zone architecture for Google Cloud Platform (GCP), implemented using Terraform (HCL). It helps organizations bootstrap and manage secure, production-ready cloud environments, including networking, IAM, security, billing, and monitoring.
+
+---
+
+## 🚀 Features
+
+- **Modular Terraform design** for reusable infrastructure components
+- **Environment isolation** for Dev, Pre-Prod, Prod, and more
+- **Centralized networking, IAM, and security policies**
+- **Automated logging, monitoring, and billing exports**
+- **Support for organization policies and folder/project hierarchy**
+
+---
+
+## 📁 Directory Structure (Summary)
+
+```
 GCP/
-├── env/                                  # Environment-specific configs (per project)
-│   ├── billing-prj/                      # Billing project (BigQuery, Billing export)
-        └── main.tf
-        └── variables.tf
-        └── provider.tf
-        └── terraform.tfvars
-│   ├── network-prj/                      # Central networking project
-        ├── IAM/                          # Folder + policies for this project
-            ├── bindings/            
-                └── main.tf
-                └── variables.tf
-                └── provider.tf
-                └── bindings.tfvars
-        ├── networking/                   # Core networking resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── networkhub.tfvars
-            └── versions.tf                        
-│   │   └── Security/                     # Security for resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── terraform.tfvars
-│   ├── infraservices-prj/                # Central networking project
-        ├── networking/                   # Core networking resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── networkhub.tfvars
-            └── versions.tf                        
-│   │   └── Security/                     # Security for resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── terraform.tfvars
-│   ├── prod-prj/                         # Production application project
-│   │   ├── IAM/                          # Folder + policies for this project
-            ├── bindings/            
-                └── main.tf
-                └── variables.tf
-                └── provider.tf
-                └── bindings.tfvars
-        ├── networking/                   # Core networking resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── prod.tfvars
-            └── versions.tf                        
-│   │   └── Security/                     # Security for resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── terraform.tfvars
+├── env/            # Environment-specific configs (per project)
+│   ├── billing-prj/
+│   ├── network-prj/
+│   ├── infraservices-prj/
+│   ├── prod-prj/
 │   ├── dev-prj/
-│   │   ├── IAM/                          # Folder + policies for this project
-            ├── bindings/            
-                └── main.tf
-                └── variables.tf
-                └── provider.tf
-                └── bindings.tfvars
-        ├── networking/                   # Core networking resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── dev.tfvars
-            └── versions.tf                        
-│   │   ├── Security/                     # Security for resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── terraform.tfvars
 │   ├── preprod-prj/
-        ├── IAM/                          # Folder + policies for this project
-            ├── bindings/            
-                └── main.tf
-                └── variables.tf
-                └── provider.tf
-                └── bindings.tfvars
-        ├── networking/                   # Core networking resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── preprod.tfvars
-            └── versions.tf                        
-│   │   ├── Security/                     # Security for resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── terraform.tfvars
-│   ├── security-prj/                     # Security project (SIEM, threat mgmt)
-        ├── IAM/                          # Folder + policies for this project
-            ├── bindings/            
-                └── main.tf
-                └── variables.tf
-                └── provider.tf
-                └── bindings.tfvars
-        ├── networking/                   # Core networking resources
-            └── main.tf
-            └── variables.tf
-            └── provider.tf
-            └── security.tfvars
-            └── versions.tf        
-    ├── logging-prj/                      # Logging + monitoring project
-│   │   ├── services/
-│   │   │   ├── logging/                  # Logging sinks + configs
-                └── main.tf
-                └── variables.tf
-                └── provider.tf
-                └── terraform.tfvars
-│   │   │   ├── monitoring/               # Monitoring + alerting
-                └── main.tf
-                └── variables.tf
-                └── provider.tf
-                └── terraform.tfvars
-│   │       ├── iam/
-    ├── sbx-prj/                          # Sandbox project (for testing)
-    ├── iac-prj/                          # infrastructure project (for service accounts and WIF)
-    ├── org_policies/
-        └── main.tf
-        └── variables.tf
-        └── provider.tf
-        └── terraform.tfvars
-├── stack/                                # Logical grouping of modules (execution entrypoints)
-│   ├── org-foundation/                   # Calls projects modules
-│   │   ├── main.tf                       # Module calls (projects)
-│   │   ├── providers.tf                  # Provider config
-│   │   ├── variables.tf                  # Input variable definitions
-│   │   └── versions.tf                   # Provider + TF version constraints
-|   ├── org-bootstrap/                    # Calls organization level folder modules
-|       ├── org-bootstrap-subfolders/     # Calls organization level subfolders modules
-|       |   ├── main.tf                   # Module calls (subfolders)
-|       |   ├── variables.tf              # Input variable definitions
-            ├── versions.tf               # Provider + TF version constraints
-|       |   ├── outputs.tf                # outputs to see the subfolder id's
-            ├── providers.tf              # Provider config          
-│   │   ├── main.tf                       # Module calls (folders)      
-│   │   ├── providers.tf                  # Provider config       
-│   │   ├── variables.tf                  # Input variable definitions      
-│   │   └── versions.tf                   # Provider + TF version constraints
-        └── outputs.tf                    # outputs to see the folder id's
-│
-├── modules/                              # Reusable building blocks 
-│   ├── networking/                       # All networking grouped
-│   │   ├── vpc/                          # Creates VPCs
-│   │   ├── subnets/                      # Creates subnets
-│   │   ├── firewall/                     # Firewall rules
-│   │   ├── routes/                       # Routes
-│   │   ├── routers/                      # Cloud Routers
-│   │   ├── nat/                          # NAT gateways
-│   │   ├── vpn/                          # VPN tunnels
-│   │   ├── lbs/                          # Load Balancers
-│   │   ├── dns/                          # DNS Servers
-│   │   ├── vpc_peering/                  # VPC Peering
-│   ├── folders/                          # Folder structure
-│   ├── projects/                         # Project creation
-│   ├── billing/                          # Cloud Billing
-│   ├── logging/                          # Logging sinks
-│   ├── monitoring/                       # Monitoring policies
-│   ├── iam/                              # IAM roles + bindings
-│   ├── security/                         # Security cmek keys
-│   └── org_policies/                     # Organization Policies
+│   ├── security-prj/
+│   ├── logging-prj/
+│   ├── sbx-prj/
+│   ├── iac-prj/
+│   ├── org_policies/
+├── stack/          # Execution entrypoints (grouping modules)
+│   ├── org-foundation/
+│   ├── org-bootstrap/
+├── modules/        # Reusable building blocks
+│   ├── networking/
+│   ├── folders/
+│   ├── projects/
+│   ├── billing/
+│   ├── logging/
+│   ├── monitoring/
+│   ├── iam/
+│   ├── security/
+│   ├── org_policies/
+```
+
+See code for full details.
+
+---
+
+## 🛠️ Prerequisites
+
+- [Terraform](https://www.terraform.io/) v1.0+
+- Access to a GCP Organization
+- Service account with permissions to create projects, folders, networks, IAM, etc.
+- [gcloud CLI](https://cloud.google.com/sdk/docs/install) (optional for local development)
+
+---
+
+## ⚡ Getting Started
+
+1. **Clone this repository**
+
+    ```bash
+    git clone https://github.com/jayadeep3/GCP-LLD.git
+    cd GCP-LLD/GCP
+    ```
+
+2. **Initialize Terraform**
+
+    ```bash
+    terraform init
+    ```
+
+3. **Customize variables**
+
+    Edit `terraform.tfvars`/`*.tfvars` in the relevant `env/` subdirectory (e.g. `dev-prj`, `prod-prj`)  
+    Set organization ID, billing account, folder/project names, etc.
+
+4. **Apply the configuration**
+
+    ```bash
+    terraform plan -var-file="env/dev-prj/terraform.tfvars"
+    terraform apply -var-file="env/dev-prj/terraform.tfvars"
+    ```
+
+---
+
+## 🧩 Customization
+
+- Create additional modules or environments by copying and editing the relevant subfolders.
+- Adjust organization policies in `env/org_policies/`.
+- Add or modify networking, security, or IAM resources as needed.
+
+---
+
+## 🤝 Contributing
+
+Contributions, feature requests, and bug reports are welcome!  
+Please open an [Issue](https://github.com/jayadeep3/GCP-LLD/issues) or submit a Pull Request.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
+
+---
+
+## 📬 Contact
+
+Maintainer: [jayadeep3](https://github.com/jayadeep3)  
+For questions or support, open an issue or reach out via GitHub.
