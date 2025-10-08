@@ -1,4 +1,4 @@
-project_id = "ndf-prod-prj-mec2-01"
+project_id = "test-prod-prj-mec2-01"
 region     = "me-central2"
 kms_environments = {
   prod = {
@@ -20,10 +20,11 @@ kms_environments = {
     # ]
     labels  = {
       environment = "prod"
-      owner       = "ndf-team"
-      app         = "ndf-app"
-      department  = "ndf-security"
+      owner       = "test-team"
+      app         = "test-app"
+      department  = "test-security"
       service_type = "kms"
     }
   }
+
 }
