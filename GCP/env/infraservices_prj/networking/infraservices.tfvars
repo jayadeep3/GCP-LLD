@@ -1,7 +1,5 @@
 # vpc
-
-
-project_id = "ndf-infraservices-prj-mec2-01"
+project_id = "test-infraservices-prj-mec2-01"
 region     = "me-central2"
 
 vpcs = {
@@ -12,9 +10,6 @@ vpcs = {
   }
 
 }
-
-
-
 # subnet
 
 subnets = {
@@ -49,7 +44,7 @@ subnets = {
 
 # # routes
 
-# project_id = "ndf-infraservices-prj-mec2-0"
+# project_id = "test-infraservices-prj-mec2-0"
 
 routes = {
 
@@ -190,4 +185,5 @@ firewall_rules = {
 #   region = "me-central2"
 #   network = "infra-spoke-mec2-vpc-0"
 #   subnetwork = 
+
 # }
