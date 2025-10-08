@@ -1,7 +1,7 @@
-project_id = "ndf-billing-prj-mec2-01"
+project_id = "test-billing-prj-mec2-01"
 region = "me-central2"
 
-central_billing_project = "ndf-billing-prj-mec2-01"
+central_billing_project = "test-billing-prj-mec2-01"
 billing_dataset_location = "me-central2"
 
 datasets = {
@@ -10,9 +10,9 @@ datasets = {
     description   = "Contains standard Cloud Billing account cost usage information"
     labels  = {
       environment = "billing"
-      owner       = "ndf-team"
-      app         = "ndf-billing-app"
-      department  = "ndf-billing"
+      owner       = "test-team"
+      app         = "test-billing-app"
+      department  = "test-billing"
       service_type = "billing"
     }
   }
@@ -21,10 +21,11 @@ datasets = {
     description   = "Contains detailed Cloud Billing account cost usage information"
     labels  = {
       environment = "billing"
-      owner       = "ndf-team"
-      app         = "ndf-billing-app"
-      department  = "ndf-billing"
+      owner       = "test-team"
+      app         = "test-billing-app"
+      department  = "test-billing"
       service_type = "billing"
     }
   }
+
 }
