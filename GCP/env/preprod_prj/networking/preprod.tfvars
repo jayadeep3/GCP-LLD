@@ -1,6 +1,6 @@
 #vpc
 
-project_id = "ndf-pp-prj-mec2-01"
+project_id = "test-pp-prj-mec2-01"
 region     = "me-central2"
 
 vpcs = {
@@ -19,7 +19,7 @@ vpcs = {
 
 # #subnets
 
-# project_id = "ndf-pp-prj-mec2-0"
+# project_id = "test-pp-prj-mec2-0"
 
 subnets = {
 
@@ -96,7 +96,7 @@ subnets = {
 
 # # routes
 
-# project_id = "ndf-pp-prj-mec2-0"
+# project_id = "test-pp-prj-mec2-0"
 
 routes = {
 
@@ -232,5 +232,6 @@ firewall_rules = {
     priority      = 65535
     description   = "Member servers to connect to AD"
   }
+
 
 }
