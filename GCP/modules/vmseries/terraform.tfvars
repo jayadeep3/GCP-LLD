@@ -1,5 +1,5 @@
 # Required for VM-Series tutorial
-project_id          = "ndf-network-prj-mec2-01"
+project_id          = "test-network-prj-mec2-01"
 public_key_path     = "~/.ssh/vmseries-tutorial.pub"
 mgmt_allow_ips      = ["0.0.0.0/0"]
 region              = "me-central2"
