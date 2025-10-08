@@ -1,6 +1,6 @@
 #vpc
 
-project_id = "ndf-prod-prj-mec2-01"
+project_id = "test-prod-prj-mec2-01"
 region     = "me-central2"
 
 vpcs = {
@@ -21,7 +21,7 @@ vpcs = {
 
 # #subnets
 
-# project_id = "ndf-prod-prj-mec2-0"
+# project_id = "test-prod-prj-mec2-0"
 
 subnets = {
 
@@ -197,12 +197,12 @@ firewall_rules = {
 
 # routes
 
-# project_id = "ndf-prod-prj-mec2-0"
+# project_id = "test-prod-prj-mec2-0"
 
 # Defines static routes for default internet egress.
 # routes = {
 #   "rt-prod-to-hub-trust-0" = {
-#     route_project_id = "ndf-prodd-prj-mec2-100"
+#     route_project_id = "test-prodd-prj-mec2-100"
 #     network          = "prod-spoke-mec2-vpc-0"
 #     # next_hop_ilb      = "10.60.20.34/24"
 #     dest_range       = "10.60.60.0/22"
@@ -385,4 +385,5 @@ routes = {
   }
 
 }
+
 
