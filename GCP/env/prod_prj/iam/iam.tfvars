@@ -1,10 +1,9 @@
-
-project_id = "ndf-prod-prj-mec2-01"
+project_id = "test-prod-prj-mec2-01"
 region = "me-central-2"
 
 service_accounts = {
     svc_prod_bootstrap = {
-    project_id = "ndf-prod-prj-mec2-01"
+    project_id = "test-prod-prj-mec2-01"
     account_id = "svc-prod-bootstrap"
     display_name = "SVC Prod Bootstrap"
     description = "Bootstrap/deployment SA for prod resources"
@@ -18,3 +17,4 @@ service_accounts = {
     ]
   } 
 }
+
