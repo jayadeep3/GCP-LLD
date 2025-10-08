@@ -1,0 +1,287 @@
+locals {
+  prefix = var.prefix != null && var.prefix != "" ? "${var.prefix}-" : ""
+
+  vmseries_vms = {
+    vmseries01 = {
+      zone                      = data.google_compute_zones.main.names[0]
+      management_private_ip     = cidrhost(var.cidr_mgmt, 2)
+      managementpeer_private_ip = cidrhost(var.cidr_mgmt, 3)
+      untrust_private_ip        = cidrhost(var.cidr_untrust, 2)
+      untrust_gateway_ip        = data.google_compute_subnetwork.untrust.gateway_address
+      trust_private_ip          = cidrhost(var.cidr_trust, 2)
+      trust_gateway_ip          = data.google_compute_subnetwork.trust.gateway_address
+      # ha2_private_ip            = cidrhost(var.cidr_ha2, 2)
+      # ha2_subnet_mask           = cidrnetmask(var.cidr_ha2)
+      # ha2_gateway_ip            = data.google_compute_subnetwork.ha2.gateway_address
+      extlb_outbound_ip         = google_compute_address.extlb_outbound_ip.address
+      extlb_inbound_ip          = google_compute_address.extlb_inbound_ip.address
+      workload_vm               = cidrhost(var.cidr_trust, 5)
+    }
+
+    vmseries02 = {
+      zone                      = data.google_compute_zones.main.names[1]
+      management_private_ip     = cidrhost(var.cidr_mgmt, 3)
+      managementpeer_private_ip = cidrhost(var.cidr_mgmt, 2)
+      untrust_private_ip        = cidrhost(var.cidr_untrust, 3)
+      untrust_gateway_ip        = data.google_compute_subnetwork.untrust.gateway_address
+      trust_private_ip          = cidrhost(var.cidr_trust, 3)
+      trust_gateway_ip          = data.google_compute_subnetwork.trust.gateway_address
+      # ha2_private_ip            = cidrhost(var.cidr_ha2, 3)
+      # ha2_subnet_mask           = cidrnetmask(var.cidr_ha2)
+      # ha2_gateway_ip            = data.google_compute_subnetwork.ha2.gateway_address
+      extlb_outbound_ip         = google_compute_address.extlb_outbound_ip.address
+      extlb_inbound_ip          = google_compute_address.extlb_inbound_ip.address
+      workload_vm               = cidrhost(var.cidr_trust, 5)
+    }
+  }
+}
+
+data "google_compute_subnetwork" "untrust" {
+  name = "snet-untrust-fw-mec2-0"
+  region    = var.region
+}
+
+data "google_compute_subnetwork" "trust" {
+  name = "snet-trust-pfw-mec2-0"
+  region    = var.region
+}
+
+data "google_compute_subnetwork" "mgmt" {
+  name = "snet-mgmt-mgmt-mec2-0"
+  region = var.region
+}
+# data "google_compute_subnetwork" "ha2" {
+#   name = 
+#   region    = var.region
+# }
+
+data "template_file" "bootstrap_xml" {
+  for_each = local.vmseries_vms
+  template = file("${path.module}/bootstrap_files/bootstrap.xml.template")
+
+  vars = {
+    extlb_outbound_ip         = google_compute_address.extlb_outbound_ip.address
+    extlb_inbound_ip          = google_compute_address.extlb_inbound_ip.address
+    management_private_ip     = each.value.management_private_ip
+    managementpeer_private_ip = each.value.managementpeer_private_ip
+    untrust_private_ip        = each.value.untrust_private_ip
+    untrust_gateway_ip        = each.value.untrust_gateway_ip
+    trust_private_ip          = each.value.trust_private_ip
+    trust_gateway_ip          = each.value.trust_gateway_ip
+    # ha2_private_ip            = each.value.ha2_private_ip
+    # ha2_subnet_mask           = each.value.ha2_subnet_mask
+    # ha2_gateway_ip            = each.value.ha2_gateway_ip
+    workload_vm               = each.value.workload_vm
+  }
+}
+
+resource "local_file" "bootstrap_xml" {
+  for_each = local.vmseries_vms
+  filename = "tmp/bootstrap-${each.key}"
+  content  = data.template_file.bootstrap_xml[each.key].rendered
+}
+
+# module "iam_service_account" {
+#   source             = "PaloAltoNetworks/swfw-modules/google//modules/iam_service_account"
+#   version            = "~> 2.0"
+#   service_account_id = "${local.prefix}vmseries-sa"
+#   project_id         = var.project_id
+# }
+
+# Create storage bucket to bootstrap VM-Series.
+module "bootstrap" {
+  source          = "PaloAltoNetworks/swfw-modules/google//modules/bootstrap"
+  version         = "~> 2.0"
+  for_each        = local.vmseries_vms
+  location        = "me-central2"
+  name_prefix     = local.prefix
+  service_account = "svc-hub-networking@ndf-network-prj-mec2-01.iam.gserviceaccount.com"
+
+  files = {
+    "bootstrap_files/init-cfg.txt.sample" = "config/init-cfg.txt"
+    "tmp/bootstrap-${each.key}"           = "config/bootstrap.xml"
+    "bootstrap_files/authcodes"           = "license/authcodes"
+  }
+
+  depends_on = [
+    local_file.bootstrap_xml
+  ]
+}
+
+# ----------------------------------------------------------------------------------------------------------------
+# Create 2 VM-Series firewalls and bootstrap their configuration.
+# ----------------------------------------------------------------------------------------------------------------
+
+# Generate random string to append to VM-Series name
+resource "random_string" "vmseries" {
+  length      = 6
+  min_numeric = 3
+  min_lower   = 3
+  special     = false
+}
+
+
+# Create VM-Series firewalls
+module "vmseries" {
+  source                = "PaloAltoNetworks/swfw-modules/google//modules/vmseries/"
+  version               = "~> 2.0"
+  for_each              = local.vmseries_vms
+  name                  = "${local.prefix}${each.key}-${random_string.vmseries.id}"
+  zone                  = each.value.zone
+  ssh_keys              = fileexists(var.public_key_path) ? "admin:${file(var.public_key_path)}" : ""
+  vmseries_image        = var.vmseries_image_name
+  create_instance_group = true
+
+  service_account = "svc-hub-networking@ndf-network-prj-mec2-01.iam.gserviceaccount.com"
+
+  metadata = {
+    mgmt-interface-swap                  = "enable"
+    vmseries-bootstrap-gce-storagebucket = module.bootstrap[each.key].bucket_name
+    serial-port-enable                   = true
+  }
+
+  network_interfaces = [
+    {
+      subnetwork = data.google_compute_subnetwork.untrust.self_link
+      private_ip = each.value.untrust_private_ip
+    },
+    {
+      subnetwork       = data.google_compute_subnetwork.mgmt.self_link
+      create_public_ip = true
+      private_ip       = each.value.management_private_ip
+    },
+    {
+      subnetwork = data.google_compute_subnetwork.trust.self_link
+      private_ip = each.value.trust_private_ip
+    }
+    # {
+    #   subnetwork = module.vpc_ha2.subnets_self_links[0]
+    #   private_ip = each.value.ha2_private_ip
+    # }
+  ]
+
+  depends_on = [
+    module.bootstrap
+  ]
+}
+
+# ----------------------------------------------------------------------------------------------------------------
+# Create health check for load balancers
+# ----------------------------------------------------------------------------------------------------------------
+
+
+resource "google_compute_region_health_check" "vmseries" {
+  name                = "${local.prefix}vmseries-extlb-hc"
+  project             = var.project_id
+  region              = var.region
+  check_interval_sec  = 3
+  healthy_threshold   = 1
+  timeout_sec         = 1
+  unhealthy_threshold = 1
+
+  http_health_check {
+    port         = 80
+    request_path = "/php/login.php"
+  }
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------
+# Create an internal load balancer to distribute traffic to VM-Series trust interfaces.
+# ----------------------------------------------------------------------------------------------------------------
+
+resource "google_compute_forwarding_rule" "intlb" {
+  name                  = "${local.prefix}vmseries-intlb-rule1"
+  load_balancing_scheme = "INTERNAL"
+  ip_address            = cidrhost(var.cidr_trust, 10)
+  ip_protocol           = "TCP"
+  all_ports             = true
+  subnetwork            = "snet-untrust-fw-mec2-0"
+  allow_global_access   = true
+  backend_service       = google_compute_region_backend_service.intlb.self_link
+}
+
+resource "google_compute_region_backend_service" "intlb" {
+  provider         = google-beta
+  name             = "${local.prefix}vmseries-intlb"
+  health_checks    = [google_compute_region_health_check.vmseries.self_link] #[google_compute_health_check.intlb.self_link]
+  network          = 	"hub-trust-mec2-vpc-0"
+  session_affinity = null
+
+  dynamic "backend" {
+    for_each = { for k, v in module.vmseries : k => v.instance_group_self_link }
+    content {
+      group    = backend.value
+      failover = false
+    }
+  }
+
+  connection_tracking_policy {
+    tracking_mode                                = "PER_SESSION"
+    connection_persistence_on_unhealthy_backends = "NEVER_PERSIST"
+    idle_timeout_sec                             = 600
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------
+# Create an external load balancer to distribute internet inbound & outbound traffic to/from VM-Series untrust interfaces.
+# ----------------------------------------------------------------------------------------------------------------
+
+// Create forwarding rule for outbound internet traffic.
+resource "google_compute_address" "extlb_outbound_ip" {
+  name         = "${local.prefix}vmseries-extlb-outbound"
+  address_type = "EXTERNAL"
+}
+
+resource "google_compute_forwarding_rule" "outbound" {
+  name                  = "${local.prefix}vmseries-extlb-outbound"
+  project               = var.project_id
+  region                = var.region
+  load_balancing_scheme = "EXTERNAL"
+  all_ports             = true
+  ip_address            = google_compute_address.extlb_outbound_ip.address
+  ip_protocol           = "L3_DEFAULT"
+  backend_service       = google_compute_region_backend_service.extlb.self_link
+}
+
+
+// Create forwarding rule for internet inbound traffic
+resource "google_compute_address" "extlb_inbound_ip" {
+  name         = "${local.prefix}vmseries-extlb-inbound"
+  address_type = "EXTERNAL"
+}
+
+resource "google_compute_forwarding_rule" "inbound" {
+  name                  = "${local.prefix}vmseries-extlb-inbound"
+  project               = var.project_id
+  region                = var.region
+  load_balancing_scheme = "EXTERNAL"
+  all_ports             = true
+  ip_address            = google_compute_address.extlb_inbound_ip.address
+  ip_protocol           = "L3_DEFAULT"
+  backend_service       = google_compute_region_backend_service.extlb.self_link
+}
+
+
+
+resource "google_compute_region_backend_service" "extlb" {
+  provider              = google-beta
+  name                  = "${local.prefix}vmseries-extlb"
+  project               = var.project_id
+  region                = var.region
+  load_balancing_scheme = "EXTERNAL"
+  health_checks         = [google_compute_region_health_check.vmseries.self_link]
+  protocol              = "UNSPECIFIED"
+
+  dynamic "backend" {
+    for_each = [for k, v in module.vmseries : module.vmseries[k].instance_group_self_link]
+    content {
+      group = backend.value
+    }
+  }
+
+  connection_tracking_policy {
+    tracking_mode                                = "PER_SESSION"
+    connection_persistence_on_unhealthy_backends = "NEVER_PERSIST"
+  }
+}
